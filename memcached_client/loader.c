@@ -334,9 +334,8 @@ int main(int argc, char** argv){
   
   struct config* config = parseArgs(argc, argv);
   printConfiguration(config);
-  
+
   assoc_init(16);
-  
   setupLoad(config);
   createWorkers(config);
   statsLoop(config);

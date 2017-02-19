@@ -1,9 +1,9 @@
 //#include <sys/stat.h>
-#include <sys/socket.h>
-#include <sys/signal.h>
-#include <sys/resource.h>
+//#include <sys/socket.h>
+//#include <sys/signal.h>
+//#include <sys/resource.h>
 //#include <fcntl.h>
-#include <netinet/in.h>
+//#include <netinet/in.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -37,7 +37,7 @@ typedef struct _stritem {
 //    uint8_t         nsuffix;    /* length of flags-and-length string */
 //    uint8_t         it_flags;   /* ITEM_* above */
 //    uint8_t         slabs_clsid;/* which slab class we're in */
-    char key[256];
+    char *key;
     uint32_t         nkey;       /* key length, w/terminating null and padding */
     uint32_t        vn;         /* version number */
     /* this odd type prevents type-punning issues when we do

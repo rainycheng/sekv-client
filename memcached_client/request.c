@@ -3,6 +3,7 @@
 #ifdef GEM5
 #include "m5op.h"
 #endif
+
 #include "encrypt.h"
 #include "myhash.h"
 
@@ -64,10 +65,37 @@ void tcpSendRequest(struct request* request) {
       ptr += sendRequest->key_size;
 
 /* SeKV code begin */
-      
+      unsigned char *p_mac, *p_enc;
+      int len_dst;
+      p_enc = (unsigned char *)malloc(sizeof(unsigned char)*sendRequest->key_size);
+      printf("1 begin encrypt!\n");
+      my_aes_gcm_encrypt(sendRequest->key, sendRequest->key_size, p_enc, &len_dst, p_mac);
+      printf("1 encrypt success!\n");
+      item *it_new, *it;
+      int hv;
+      it_new = (item *)malloc(sizeof(item));
+      memcpy(it_new->key, p_mac, strlen(p_mac));
+      it_new->nkey = strlen(p_mac);
+      hv = MurmurHash3_x86_32(it_new->key, it_new->nkey);
+      it = assoc_find(it_new->key, it_new->nkey, hv);
+      if(it){
+        it_new->vn = it->vn;
+        free(it_new);
+      }
+      else{
+        it_new->vn = 0;
+        assoc_insert(it_new,hv);
+      }
+      free(p_enc);
 /*SeKV code end */
 
       memcpy(ptr, sendRequest->value, sendRequest->value_size);
+/* SeKV code begin */
+      unsigned char *p_evalue;
+      p_evalue = (unsigned char *)malloc(sizeof(unsigned char)*sendRequest->value_size);
+      my_aes_gcm_encrypt(sendRequest->value, sendRequest->value_size, p_evalue, &len_dst, p_mac);
+      free(p_evalue);
+/*SeKV code end */
 
       gettimeofday(&request->send_time, NULL);
       writeBlock(request->connection->sock, oneBigPacket, totalSize);
@@ -98,8 +126,48 @@ void tcpSendRequest(struct request* request) {
 
       memcpy(ptr, sendRequest->key, sendRequest->key_size);
       ptr += sendRequest->key_size;
-
+/*begin SeKV code*/
+      unsigned char *p_mac, *p_enc;
+      int len_dst;
+      printf("2 begin encrypt!\n");
+      p_enc = (unsigned char *)malloc(sizeof(unsigned char)*sendRequest->key_size);
+      printf("sendRequest->key:%s\n",sendRequest->key);
+      printf("key_size:%d\n",sendRequest->key_size);
+      printf("strlen(key):%d\n",strlen(sendRequest->key));
+      p_mac = (unsigned char *)malloc(sizeof(unsigned char)*16);
+      my_aes_gcm_encrypt(sendRequest->key, sendRequest->key_size, p_enc, &len_dst, p_mac);
+      printf("2 encrypt success!\n");
+      item *it_new, *it;
+      int hv;
+      it_new = (item *)malloc(sizeof(item));
+      printf("item malloc\n");
+      //printf("strlen(p_mac):%d\n",strlen(p_mac));
+      it_new->key = (char *)malloc(sizeof(char)*strlen(p_mac));
+      memcpy(it_new->key, p_mac, strlen(p_mac));
+      printf("memcpy p_mac:%s\n",p_mac);
+      it_new->nkey = strlen(p_mac);
+      hv = MurmurHash3_x86_32(it_new->key, it_new->nkey);
+      printf("MurmurHash success!\n");
+      it = assoc_find(it_new->key, it_new->nkey, hv);
+      printf("assoc_find\n");
+      if(it){
+        it_new->vn = it->vn;
+        free(it_new);
+      }
+      else{
+        it_new->vn = 0;
+        assoc_insert(it_new,hv);
+        printf("assoc_insert\n");
+      }
+      free(p_enc);
+/*end SeKV code*/
       memcpy(ptr, sendRequest->value, sendRequest->value_size);
+/*begin SeKV code*/
+      unsigned char *p_evalue;
+      p_evalue = (unsigned char *)malloc(sizeof(unsigned char)*sendRequest->value_size);
+      my_aes_gcm_encrypt(sendRequest->value, sendRequest->value_size, p_evalue, &len_dst, p_mac);
+      free(p_evalue);
+/*end SeKV code*/
       sendRequest = sendRequest->next_request;
     }
 
