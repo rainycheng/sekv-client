@@ -144,10 +144,40 @@ int tcpReceiveResponse(struct request* request, int final, double difftime) {
   readBlock(fd, extras, extrasSize);
   readBlock(fd, key, keySize);
   key[keySize] = '\0';
+/*SeKV code begin*/  
+  unsigned char *p_mac, *p_enc;
+  int len_dst;
+  p_enc = (unsigned char *)malloc(sizeof(unsigned char)*keySize);
+  p_mac = (unsigned char *)malloc(sizeof(unsigned char)*16);
+  my_aes_gcm_encrypt(key,keySize,p_enc,&len_dst, p_mac); 
+  item *it;
+  int hv;
+  hv = MurmurHash3_x86_32(key, keySize);
+  it = assoc_find(key,keySize,hv);
+  if(it){
+     hv = 0;
+  }
+  else{
+//    printf("return key not found\n");
+  }
+  free(p_enc);
+  free(p_mac);
+/*SeKV code end*/
 
   readBlock(fd, value, valueSize);
 
   value[valueSize] = '\0';
+/*SeKV code begin*/
+  if(value){
+    unsigned char *p_evalue, *p_mac_value;
+    p_evalue = (unsigned char *)malloc(sizeof(unsigned char)*valueSize);
+    p_mac_value = (unsigned char *)malloc(sizeof(unsigned char)*16);
+    my_aes_gcm_encrypt(value,valueSize,p_evalue,&len_dst,p_mac_value); 
+    free(p_evalue);
+    free(p_mac_value);
+  }
+/*SeKV code end*/
+
   struct response response;
   response.request = request;
   response.value_size = valueSize;

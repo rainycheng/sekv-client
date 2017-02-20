@@ -16,27 +16,27 @@ void my_aes_gcm_encrypt(char *p_src, uint32_t src_len, char *p_dst, uint32_t *ds
 //    p_out_mac = (sgx_aes_gcm_128bit_tag_t *)malloc(sizeof(sgx_aes_gcm_128bit_tag_t)*1000);
 //    unsigned char *p_out_mac;
 //    p_out_mac = (unsigned char *)malloc(sizeof(unsigned char)*16);
-    printf("enter aes gcm\n");
+//    printf("enter aes gcm\n");
     ctx = EVP_CIPHER_CTX_new();
     EVP_EncryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL);
     EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, sizeof(gcm_iv), NULL);
     EVP_EncryptInit_ex(ctx, NULL, NULL, gcm_key, gcm_iv);
-    printf("aes gcm init success!\n");
+//    printf("aes gcm init success!\n");
     EVP_EncryptUpdate(ctx, p_dst, dst_len, p_src, strlen(p_src));
-    printf("aes gcm update\n");
+//    printf("aes gcm update\n");
 //        printf("Ciphertext:\n");
 //        BIO_dump_fp(stdout, p_dst, *dst_len);
 //        printf("dst_len:%d\n",*dst_len);
     EVP_EncryptFinal_ex(ctx, p_dst, dst_len);
-    printf("aes gcm final\n");
+//    printf("aes gcm final\n");
     EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, 16, p_out_mac);
-    printf("aes gcm mac\n");
+//    printf("aes gcm mac\n");
     EVP_CIPHER_CTX_free(ctx);
 
 
-        printf("Ciphertext:\n");
-        BIO_dump_fp(stdout, p_dst, strlen(p_dst));
-        printf("dst_len:%d\n",*dst_len);
+//        printf("Ciphertext:\n");
+//        BIO_dump_fp(stdout, p_dst, strlen(p_dst));
+//        printf("dst_len:%d\n",*dst_len);
 }
 
 void my_aes_gcm_decrypt(char *p_src, uint32_t src_len, char *p_dst, uint32_t *dst_len, unsigned char *p_out_mac){

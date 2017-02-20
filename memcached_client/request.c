@@ -47,6 +47,7 @@ void tcpSendRequest(struct request* request) {
       m5_work_begin(sendRequest->header.opcode, sendRequest->header.opaque); 
 #endif
 
+      gettimeofday(&request->send_time, NULL);
   if(request->bad_multiget) {
 
     while(sendRequest != NULL) {
@@ -67,13 +68,16 @@ void tcpSendRequest(struct request* request) {
 /* SeKV code begin */
       unsigned char *p_mac, *p_enc;
       int len_dst;
+//      printf("begin multiget!\n");
       p_enc = (unsigned char *)malloc(sizeof(unsigned char)*sendRequest->key_size);
-      printf("1 begin encrypt!\n");
+//      printf("1 begin encrypt!\n");
+      p_mac = (unsigned char *)malloc(sizeof(unsigned char)*16);
       my_aes_gcm_encrypt(sendRequest->key, sendRequest->key_size, p_enc, &len_dst, p_mac);
-      printf("1 encrypt success!\n");
+//      printf("1 encrypt success!\n");
       item *it_new, *it;
       int hv;
       it_new = (item *)malloc(sizeof(item));
+      it_new->key = (char *)malloc(sizeof(char)*strlen(p_mac));
       memcpy(it_new->key, p_mac, strlen(p_mac));
       it_new->nkey = strlen(p_mac);
       hv = MurmurHash3_x86_32(it_new->key, it_new->nkey);
@@ -92,12 +96,14 @@ void tcpSendRequest(struct request* request) {
       memcpy(ptr, sendRequest->value, sendRequest->value_size);
 /* SeKV code begin */
       unsigned char *p_evalue;
+      if(sendRequest->value){
       p_evalue = (unsigned char *)malloc(sizeof(unsigned char)*sendRequest->value_size);
       my_aes_gcm_encrypt(sendRequest->value, sendRequest->value_size, p_evalue, &len_dst, p_mac);
       free(p_evalue);
+      }
 /*SeKV code end */
 
-      gettimeofday(&request->send_time, NULL);
+//      gettimeofday(&request->send_time, NULL);
       writeBlock(request->connection->sock, oneBigPacket, totalSize);
 
       free(oneBigPacket);
@@ -116,6 +122,7 @@ void tcpSendRequest(struct request* request) {
     char* oneBigPacket = malloc(sizeof(char) * totalSize);
     char* ptr = oneBigPacket;
 
+    gettimeofday(&request->send_time, NULL);
     sendRequest = request;
     while(sendRequest != NULL) {
       memcpy(ptr, (char *) (& sendRequest->header), sizeof(struct request_header));
@@ -129,49 +136,53 @@ void tcpSendRequest(struct request* request) {
 /*begin SeKV code*/
       unsigned char *p_mac, *p_enc;
       int len_dst;
-      printf("2 begin encrypt!\n");
+//      printf("2 begin encrypt!\n");
       p_enc = (unsigned char *)malloc(sizeof(unsigned char)*sendRequest->key_size);
-      printf("sendRequest->key:%s\n",sendRequest->key);
-      printf("key_size:%d\n",sendRequest->key_size);
-      printf("strlen(key):%d\n",strlen(sendRequest->key));
+//      printf("sendRequest->key:%s\n",sendRequest->key);
+//      printf("key_size:%d\n",sendRequest->key_size);
+//      printf("strlen(key):%d\n",strlen(sendRequest->key));
       p_mac = (unsigned char *)malloc(sizeof(unsigned char)*16);
       my_aes_gcm_encrypt(sendRequest->key, sendRequest->key_size, p_enc, &len_dst, p_mac);
-      printf("2 encrypt success!\n");
+//      printf("2 encrypt success!\n");
       item *it_new, *it;
       int hv;
       it_new = (item *)malloc(sizeof(item));
-      printf("item malloc\n");
-      //printf("strlen(p_mac):%d\n",strlen(p_mac));
+//      printf("item malloc\n");
+//      printf("strlen(p_mac):%d\n",strlen(p_mac));
       it_new->key = (char *)malloc(sizeof(char)*strlen(p_mac));
       memcpy(it_new->key, p_mac, strlen(p_mac));
-      printf("memcpy p_mac:%s\n",p_mac);
+//      printf("memcpy p_mac:%s\n",p_mac);
       it_new->nkey = strlen(p_mac);
       hv = MurmurHash3_x86_32(it_new->key, it_new->nkey);
-      printf("MurmurHash success!\n");
+//      printf("MurmurHash success!\n");
       it = assoc_find(it_new->key, it_new->nkey, hv);
-      printf("assoc_find\n");
+//      printf("assoc_find\n");
       if(it){
         it_new->vn = it->vn;
         free(it_new);
+//        printf("assoc_find it\n");
       }
       else{
         it_new->vn = 0;
         assoc_insert(it_new,hv);
-        printf("assoc_insert\n");
+//        printf("assoc_insert\n");
       }
       free(p_enc);
 /*end SeKV code*/
       memcpy(ptr, sendRequest->value, sendRequest->value_size);
 /*begin SeKV code*/
       unsigned char *p_evalue;
+//      printf("encrypt value\n");
+      if(sendRequest->value){
       p_evalue = (unsigned char *)malloc(sizeof(unsigned char)*sendRequest->value_size);
       my_aes_gcm_encrypt(sendRequest->value, sendRequest->value_size, p_evalue, &len_dst, p_mac);
       free(p_evalue);
+      }
 /*end SeKV code*/
       sendRequest = sendRequest->next_request;
     }
 
-    gettimeofday(&request->send_time, NULL);
+//    gettimeofday(&request->send_time, NULL);
     writeBlock(request->connection->sock, oneBigPacket, totalSize);
 
     free(oneBigPacket);
@@ -317,12 +328,12 @@ struct request* createRequest(int requestType, struct conn* conn, struct worker*
     case STAT:{
 
       request_header->opcode = OP_STAT;
-
+      printf("STAT\n");
       break;
 
     }//End case STAT
     case ADD:{
-
+      printf("ADD\n");
       int body_length = 0;
 
       request_header->opcode = OP_ADD;
@@ -360,7 +371,7 @@ struct request* createRequest(int requestType, struct conn* conn, struct worker*
 
     }//End case REP
     case REP:{
-
+      printf("REP\n");
       int body_length = 0;
 
       request_header->opcode = OP_REP;
@@ -398,7 +409,7 @@ struct request* createRequest(int requestType, struct conn* conn, struct worker*
 
     }//End case REP
     case DEL:{
-
+      printf("DEL\n");
       request_header->opcode = OP_DEL;
 
       request_header->key_length[0] = ((unsigned int)(strlen(key) & 0xff00))>>8;
@@ -425,7 +436,7 @@ struct request* createRequest(int requestType, struct conn* conn, struct worker*
 
     }//End case DEL
     case INCR:{
-
+      printf("INCR\n");
       request_header->opcode = OP_INCR;
 
       request_header->key_length[0] = ((unsigned int)(strlen(key) & 0xff00))>>8;
@@ -467,7 +478,7 @@ struct request* createRequest(int requestType, struct conn* conn, struct worker*
 
     }//End case INCR
     case SET:{
-
+//      printf("SET\n");
       int body_length = 0;
 
       request_header->opcode = OP_SET;
@@ -504,7 +515,7 @@ struct request* createRequest(int requestType, struct conn* conn, struct worker*
       break;
     }
   case GET:{
-
+//      printf("GET\n");
       int body_length = 0;
 
       request_header->opcode = OP_GET;
@@ -537,7 +548,7 @@ struct request* createRequest(int requestType, struct conn* conn, struct worker*
       break;
     }
   case GETQ:{
-
+//      printf("GETQ\n");
       int body_length = 0;
 
       request_header->opcode = OP_GETQ;
