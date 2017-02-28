@@ -27,12 +27,13 @@ int    time_substract(struct timeval *result, struct timeval *begin,struct timev
 int main(int argc, char *argv[])  
 {  
     int client_sockfd;  
-    int len,value_len,key;  
+    int len,value_len,key,i;  
     struct sockaddr_in remote_addr; //服务器端网络地址结构体  
     char buf[1100000], comm[BUFSIZ];  //数据传送的缓冲区  
     memset(&remote_addr,0,sizeof(remote_addr)); //数据初始化--清零  
     remote_addr.sin_family=AF_INET; //设置为IP通信  
-    remote_addr.sin_addr.s_addr=inet_addr("10.214.16.146");//服务器IP地址  
+//    remote_addr.sin_addr.s_addr=inet_addr("10.214.16.146");//服务器IP地址  
+    remote_addr.sin_addr.s_addr=inet_addr("127.0.0.1");//服务器IP地址  
     remote_addr.sin_port=htons(11211); //服务器端口号  
       
     /*创建客户端套接字--IPv4协议，面向连接通信，TCP协议*/  
@@ -86,8 +87,12 @@ gettimeofday(&t_start, NULL);
     
 //    memcpy(buf,value,strlen(value));
 //    len=send(client_sockfd,value,atoi(argv[2])+2,0);
-    len=recv(client_sockfd,buf,BUFSIZ,0);//接收服务器端信息  
-    receive_sum = pow(2, atoi(argv[1]-1))*1024;
+//    len=recv(client_sockfd,buf,BUFSIZ,0);//接收服务器端信息  
+   receive_sum = 1024; 
+   printf("atoi(argv[1]):%d\n",atoi(argv[1]));
+   for(i=1;i<atoi(argv[1]);i++){
+    receive_sum = receive_sum*2;}
+    receive_sum -= 500;
     printf("Receive:%d\n",receive_sum);
     
     while(receive_sum > 0 ){
@@ -101,8 +106,8 @@ gettimeofday(&t_end, NULL);
 time_substract(&t_diff,&t_start,&t_end);
 printf("time cost is: %u s, %u us.\n", t_diff.tv_sec, t_diff.tv_usec);
 
-    buf[len]='\0';  
-    printf("%s",buf); //打印服务器端信息  
+//    buf[len]='\0';  
+//    printf("%s",buf); //打印服务器端信息  
       
 //    /*循环的发送接收信息并打印接收信息--recv返回接收到的字节数，send返回发送的字节数*/  
 ////    while(1)  
