@@ -48,8 +48,8 @@ int main(int argc, char *argv[])
         perror("connect");  
         return 1;  
     }  
-//    printf("connected to server\n");  
-    char *command="set ";
+    printf("connected to server\n");  
+    char *command="get ";
     char num[255];
 //    printf("1");
     strcpy(comm,command);
@@ -57,12 +57,12 @@ int main(int argc, char *argv[])
 //    scanf("%d",&key);
 //    sprintf(num,"%d",key);
     strcat(comm,argv[1]);
-    strcat(comm," 0 0 ");
+//    strcat(comm," 0 0 ");
 //    scanf("%d",&value_len);
 //    printf("3");
 //    sprintf(num,"%d",value_len);
 //    printf("4");
-    strcat(comm,argv[2]);
+//    strcat(comm,argv[2]);
 //    printf("5");
     strcat(comm,"\r\n");
 //    printf("6");
@@ -70,9 +70,9 @@ int main(int argc, char *argv[])
 //    printf("strlen(comm):%d\n", strlen(comm));
     
     char *value;
-    value = (char *)malloc(sizeof(char)*(atoi(argv[2])+2));
-    memset(value,'a', atoi(argv[2]));
-    strcat(value,"\r\n");
+//    value = (char *)malloc(sizeof(char)*(atoi(argv[2])+2));
+//    memset(value,'a', atoi(argv[2]));
+//    strcat(value,"\r\n");
 
 struct timeval t_start,t_end,t_diff;
     memset(&t_start,0,sizeof(struct timeval));
@@ -84,7 +84,7 @@ gettimeofday(&t_start, NULL);
     len=send(client_sockfd,comm,strlen(comm),0);
     
 //    memcpy(buf,value,strlen(value));
-    len=send(client_sockfd,value,atoi(argv[2])+2,0);
+//    len=send(client_sockfd,value,atoi(argv[2])+2,0);
     len=recv(client_sockfd,buf,BUFSIZ,0);//接收服务器端信息  
 gettimeofday(&t_end, NULL);
 
