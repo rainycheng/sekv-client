@@ -94,10 +94,10 @@ gettimeofday(&t_start, NULL);
 //    int len_dst;
 //    p_enc = (unsigned char *)malloc(sizeof(unsigned char)*strlen(comm));
 //    p_mac = (unsigned char *)malloc(sizeof(unsigned char)*16);
-//    my_aes_gcm_encrypt(comm,strlen(comm),p_enc,&len_dst,p_mac);
+    my_aes_gcm_encrypt(comm,strlen(comm),p_enc,&len_dst,p_mac);
 //    memcpy(buf,value,strlen(value));
     len=send(client_sockfd,value,atoi(argv[2])+2,0);
-//    my_aes_gcm_encrypt(value,strlen(value),p_dec,&len_dst,p_mac);
+    my_aes_gcm_encrypt(value,strlen(value),p_dec,&len_dst,p_mac);
     len=recv(client_sockfd,buf,BUFSIZ,0);//接收服务器端信息  
 gettimeofday(&t_end, NULL);
 
